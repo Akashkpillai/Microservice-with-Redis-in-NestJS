@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { PrismaClientExceptionFilter } from './filters/prisma-exception.filter';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
+import { ResponseStatusInterceptor } from './interceptor/response.intercept';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,6 +14,8 @@ async function bootstrap() {
     new PrismaClientExceptionFilter(httpAdapter),
     new HttpExceptionFilter(),
   );
+
+  app.useGlobalInterceptors(new ResponseStatusInterceptor());
 
   app.useGlobalPipes(new ValidationPipe());
 

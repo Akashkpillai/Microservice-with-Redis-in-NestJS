@@ -1,23 +1,28 @@
+import UtilsService from './../helpers/service/util.service';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create.dto';
 import * as argon2 from 'argon2';
 import { User } from './dto/user.dto';
+import { UpdateDto } from './dto/update.dto';
 
 @Injectable()
 export class UserService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private utilsService: UtilsService,
+  ) {}
 
   async create(data: CreateUserDto): Promise<User> {
-    const existingUser = await this.prismaService.$queryRawUnsafe<User>(
+    const existingUser = await this.utilsService.querySingle<User>(
       `SELECT * FROM "user" WHERE email = $1 OR number = $2`,
       data.email,
       data.number,
     );
 
-    if (existingUser && existingUser[0]) {
+    if (existingUser) {
       const conflictField =
-        existingUser[0].email === data.email ? 'email' : 'number';
+        existingUser.email === data.email ? 'email' : 'number';
       throw new HttpException(
         { message: `User with same ${conflictField} already exist` },
         HttpStatus.CONFLICT,
@@ -60,11 +65,70 @@ export class UserService {
     }
   }
 
+  async update(id, payload: UpdateDto): Promise<{ message: string }> {
+    if (!payload) {
+      throw new HttpException(
+        { message: 'Please provide the data to be update' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const existingUser = await this.findById(id);
+
+    if (!existingUser) {
+      throw new HttpException(
+        { message: 'User not found to update' },
+        HttpStatus.NOT_FOUND,
+      );
+    } else {
+      const updateResult = await this.utilsService.updateQuery(
+        'user', // Table name
+        payload, // Fields to update
+        { id: parseInt(id, 10) }, // Condition for the update
+      );
+      return updateResult
+        ? { message: 'User updated' }
+        : { message: 'User updation failed' };
+    }
+  }
+
+  async findAll(): Promise<User[]> {
+    const users = await this.prismaService.$queryRawUnsafe<User[]>(
+      `SELECT name , email , bio ,gender , preferences FROM "user";`,
+    );
+    if (!users.length) {
+      throw new HttpException(
+        { message: 'User details not found' },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    return users;
+  }
+
   async hashPassword(password: string): Promise<string> {
     return await argon2.hash(password);
   }
 
   async verifyPassword(hash: string, password: string): Promise<boolean> {
     return await argon2.verify(hash, password);
+  }
+
+  async findById(id): Promise<User> {
+    if (typeof id == 'string') {
+      id = parseInt(id, 10);
+    }
+    const user = await this.utilsService.querySingle<User>(
+      `SELECT * FROM "user" WHERE id = $1`,
+      id,
+    );
+
+    if (!user) {
+      throw new HttpException(
+        { message: 'User not found' },
+        HttpStatus.NOT_FOUND,
+      );
+    } else {
+      return user;
+    }
   }
 }
