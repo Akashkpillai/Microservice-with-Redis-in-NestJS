@@ -36,7 +36,7 @@ export class UserService {
 
     if (data.bio) {
       query += ' bio,';
-      values += `, '${data.bio}'`;
+      values += ` '${data.bio}',`;
     }
 
     if (data.preferences) {
@@ -105,20 +105,12 @@ export class UserService {
     return users;
   }
 
-  async hashPassword(password: string): Promise<string> {
-    return await argon2.hash(password);
-  }
-
-  async verifyPassword(hash: string, password: string): Promise<boolean> {
-    return await argon2.verify(hash, password);
-  }
-
   async findById(id): Promise<User> {
     if (typeof id == 'string') {
       id = parseInt(id, 10);
     }
     const user = await this.utilsService.querySingle<User>(
-      `SELECT * FROM "user" WHERE id = $1`,
+      `SELECT id , name , email , number ,bio , gender ,preferences FROM "user" WHERE id = $1`,
       id,
     );
 
@@ -130,5 +122,29 @@ export class UserService {
     } else {
       return user;
     }
+  }
+
+  async delete(id): Promise<boolean> {
+    const existingUser = await this.findById(id);
+
+    if (!existingUser) {
+      throw new HttpException(
+        { message: 'User not found to update' },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const deleted = await this.prismaService.$queryRawUnsafe(
+      `DELETE FROM "user" WHERE id = ${id} RETURNING id AS id;`,
+    );
+    return deleted && deleted[0].id ? true : false;
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    return await argon2.hash(password);
+  }
+
+  async verifyPassword(hash: string, password: string): Promise<boolean> {
+    return await argon2.verify(hash, password);
   }
 }
