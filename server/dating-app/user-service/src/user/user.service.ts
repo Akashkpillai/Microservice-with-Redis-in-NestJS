@@ -1,17 +1,37 @@
 import UtilsService from './../helpers/service/util.service';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create.dto';
 import * as argon2 from 'argon2';
 import { User } from './dto/user.dto';
 import { UpdateDto } from './dto/update.dto';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class UserService {
     constructor(
         private prismaService: PrismaService,
-        private utilsService: UtilsService
+        private utilsService: UtilsService,
+        @Inject('NOTIFICATION_SERVICE') private readonly client: ClientProxy
     ) {}
+
+    async notifyUser() {
+        const emailPayload = {
+            to: 'akashkpillai55@gmail.com',
+            subject: 'Welcome to our app!',
+            text: 'Thank you for signing up.',
+            html: '<p>Thank you for <strong>signing up</strong>.</p>',
+        };
+
+        try {
+            const result = await this.client
+                .send('send_email', emailPayload) // Publish the event to Redis
+                .toPromise();
+            console.log(result);
+        } catch (error) {
+            console.error('Error sending email:', error);
+        }
+    }
 
     async create(data: CreateUserDto): Promise<User> {
         const existingUser = await this.utilsService.querySingle<User>(
@@ -49,11 +69,11 @@ export class UserService {
         const fullQuery = `${query} ${values} RETURNING id;`;
 
         const user = await this.prismaService.$queryRawUnsafe(fullQuery);
-
         if (user[0].id) {
             const userData: User = await this.prismaService.$queryRawUnsafe(
                 ` SELECT * FROM "user" WHERE id = ${user[0].id}`
             );
+            await this.notifyUser();
             return userData;
         } else {
             console.error('Failed to create user or unexpected response:', user);
