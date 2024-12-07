@@ -1,7 +1,7 @@
 import UtilsService from './../helpers/service/util.service';
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateUserDto } from './dto/create.dto';
+// import { CreateUserDto } from './dto/create.dto';
 import * as argon2 from 'argon2';
 import { User } from './dto/user.dto';
 import { UpdateDto } from './dto/update.dto';
@@ -15,72 +15,20 @@ export class UserService {
         @Inject('NOTIFICATION_SERVICE') private readonly client: ClientProxy
     ) {}
 
-    async notifyUser() {
+    async notifyUser(to: string, subject: string, html: string) {
         const emailPayload = {
-            to: 'akashkpillai55@gmail.com',
-            subject: 'Welcome to our app!',
-            text: 'Thank you for signing up.',
-            html: '<p>Thank you for <strong>signing up</strong>.</p>',
+            to: to,
+            subject: subject,
+            html: html,
         };
 
         try {
             const result = await this.client
                 .send('send_email', emailPayload) // Publish the event to Redis
                 .toPromise();
-            console.log(result);
+            return result;
         } catch (error) {
             console.error('Error sending email:', error);
-        }
-    }
-
-    async create(data: CreateUserDto): Promise<User> {
-        const existingUser = await this.utilsService.querySingle<User>(
-            `SELECT * FROM "user" WHERE email = $1 OR number = $2`,
-            data.email,
-            data.number
-        );
-
-        if (existingUser) {
-            const conflictField = existingUser.email === data.email ? 'email' : 'number';
-            throw new HttpException(
-                { message: `User with same ${conflictField} already exist` },
-                HttpStatus.CONFLICT
-            );
-        }
-
-        const hashedPassword = await this.hashPassword(data.password);
-
-        let query = 'INSERT INTO "user" (name, email, password ,number ,gender ,';
-        let values = `VALUES ('${data.name}', '${data.email}', '${hashedPassword}' ,${data.number},'${data.gender}',`;
-
-        if (data.bio) {
-            query += ' bio,';
-            values += ` '${data.bio}',`;
-        }
-
-        if (data.preferences) {
-            query += ' preferences';
-            values += `'${data.preferences}'`;
-        }
-
-        query += ') ';
-        values += ')';
-
-        const fullQuery = `${query} ${values} RETURNING id;`;
-
-        const user = await this.prismaService.$queryRawUnsafe(fullQuery);
-        if (user[0].id) {
-            const userData: User = await this.prismaService.$queryRawUnsafe(
-                ` SELECT * FROM "user" WHERE id = ${user[0].id}`
-            );
-            await this.notifyUser();
-            return userData;
-        } else {
-            console.error('Failed to create user or unexpected response:', user);
-            throw new HttpException(
-                { message: 'User creation failed' },
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
         }
     }
 
@@ -130,6 +78,37 @@ export class UserService {
         } else {
             return user;
         }
+    }
+
+    async findByEmail(email: string): Promise<{
+        email: string;
+        id: number;
+        password: string;
+        isBlocked: boolean;
+        isEmailverified: boolean;
+    }> {
+        const user = await this.utilsService.querySingle<{
+            id: number;
+            email: string;
+            password: string;
+            is_blocked: boolean;
+            is_email_verified: boolean;
+        }>(
+            `SELECT id, email, password,is_email_verified,is_blocked FROM "user" WHERE email = $1`,
+            email
+        );
+
+        if (!user) {
+            throw new HttpException({ message: 'User not found' }, HttpStatus.NOT_FOUND);
+        }
+
+        return {
+            id: user.id,
+            email: user.email,
+            password: user.password,
+            isBlocked: user.is_blocked,
+            isEmailverified: user.is_email_verified,
+        };
     }
 
     async delete(id): Promise<boolean> {

@@ -18,18 +18,12 @@ export class MailerService {
     });
   }
 
-  async sendMail(
-    to: string,
-    subject: string,
-    text: string,
-    html?: string,
-  ): Promise<void> {
+  async sendMail(to: string, subject: string, html?: string): Promise<void> {
     try {
       const mailOptions = {
         from: '"Cupid" <akashkpillai55@gmail.com>', // Sender address
         to, // Recipient(s)
         subject, // Email subject
-        text, // Plain text body
         html, // HTML body (optional)
       };
 

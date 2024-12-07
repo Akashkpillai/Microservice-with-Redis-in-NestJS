@@ -6,20 +6,17 @@ import { ValidationPipe } from '@nestjs/common';
 import { ResponseStatusInterceptor } from './interceptor/response.intercept';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+    const app = await NestFactory.create(AppModule);
 
-  const { httpAdapter } = app.get(HttpAdapterHost);
+    const { httpAdapter } = app.get(HttpAdapterHost);
 
-  app.useGlobalFilters(
-    new PrismaClientExceptionFilter(httpAdapter),
-    new HttpExceptionFilter(),
-  );
+    app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter), new HttpExceptionFilter());
 
-  app.useGlobalInterceptors(new ResponseStatusInterceptor());
+    app.useGlobalInterceptors(new ResponseStatusInterceptor());
 
-  app.useGlobalPipes(new ValidationPipe());
+    app.useGlobalPipes(new ValidationPipe());
 
-  await app.listen(3000);
-  console.log('Port is running on 3000');
+    await app.listen(3011);
+    console.log('Port is running on 3011');
 }
 bootstrap();

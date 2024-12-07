@@ -1,17 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create.dto';
+// import { CreateUserDto } from './dto/create.dto';
 import { User } from './dto/user.dto';
 import { UpdateDto } from './dto/update.dto';
 
 @Controller('user')
 export class UserController {
     constructor(private userService: UserService) {}
-
-    @Post('sign-up')
-    async create(@Body() data: CreateUserDto): Promise<User> {
-        return this.userService.create(data);
-    }
 
     @Patch(':id')
     async update(@Param('id') id: number, @Body() data: UpdateDto): Promise<{ message: string }> {

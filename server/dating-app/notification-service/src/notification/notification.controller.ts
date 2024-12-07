@@ -10,13 +10,11 @@ export class NotificationController {
   async handleSendEmail(payload: {
     to: string;
     subject: string;
-    text: string;
     html?: string;
   }) {
-    const { to, subject, text, html } = payload;
-
+    const { to, subject, html } = payload;
     try {
-      await this.mailerService.sendMail(to, subject, text, html);
+      await this.mailerService.sendMail(to, subject, html);
       return { status: 'success', message: 'Email sent successfully!' };
     } catch (error) {
       return { status: 'error', message: error.message };
