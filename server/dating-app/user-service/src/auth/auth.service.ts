@@ -63,19 +63,13 @@ export class AuthService {
                 user[0].id
             );
             // Send the activation email
-            const emailSent = await this.usreService.notifyUser(
+            await this.usreService.notifyUser(
                 userData.email,
                 'Activate Your Account',
                 EmailTemplates.activationEmail(activationLink) // HTML content
             );
-            if (emailSent.status === 'success') {
-                return { message: 'Activation email sent. Please check your inbox.' };
-            } else {
-                throw new HttpException(
-                    { message: 'Error while sending email please contact our help center' },
-                    HttpStatus.NOT_FOUND
-                );
-            }
+
+            return { message: 'Activation email sent. Please check your inbox.' };
         } else {
             console.error('Failed to create user or unexpected response:', user);
             throw new HttpException(

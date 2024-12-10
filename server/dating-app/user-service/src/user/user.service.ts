@@ -23,9 +23,7 @@ export class UserService {
         };
 
         try {
-            const result = await this.client
-                .send('send_email', emailPayload) // Publish the event to Redis
-                .toPromise();
+            const result = this.client.emit('send_email', emailPayload); // Publish the event to Redis
             return result;
         } catch (error) {
             console.error('Error sending email:', error);
