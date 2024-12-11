@@ -101,7 +101,7 @@ export class AuthService {
         }
     }
 
-    async login(data: LoginEmailDto): Promise<{ active_token: string }> {
+    async login(data: LoginEmailDto): Promise<{ access_token: string }> {
         const user = await this.usreService.findByEmail(data.email);
         if (user && user.password) {
             const isMatch = await this.usreService.verifyPassword(user.password, data.password);
@@ -127,6 +127,43 @@ export class AuthService {
             email: user.email,
         };
         const token = await this.jwtService.sign(payload);
-        return { active_token: token };
+        return { access_token: token };
+    }
+
+    async otpLogin(data: { phone: string; otp: string }): Promise<{ access_token: string }> {
+        const user = await this.usreService.findByNumber(data.phone);
+
+        const currentTime = new Date();
+        const utcTime = currentTime.toISOString();
+        user.otp_expiry = user.otp_expiry.toISOString();
+
+        // Check if OTP has expired
+        if (utcTime > user.otp_expiry) {
+            throw new HttpException({ message: 'OTP has expired' }, HttpStatus.BAD_REQUEST);
+        }
+        if (user.otp !== data.otp) {
+            throw new HttpException({ message: 'Invalid Otp' }, HttpStatus.BAD_REQUEST);
+        }
+
+        if (user.isBlocked) {
+            throw new HttpException(
+                { message: 'Your account is blocked' },
+                HttpStatus.UNAUTHORIZED
+            );
+        }
+
+        if (!user.isEmailverified) {
+            throw new HttpException(
+                { message: 'Please verify your email address' },
+                HttpStatus.UNAUTHORIZED
+            );
+        }
+
+        const payload = {
+            id: user.id,
+            email: user.email,
+        };
+        const token = await this.jwtService.sign(payload);
+        return { access_token: token };
     }
 }

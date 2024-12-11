@@ -1,7 +1,6 @@
 import UtilsService from './../helpers/service/util.service';
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-// import { CreateUserDto } from './dto/create.dto';
 import * as argon2 from 'argon2';
 import { User } from './dto/user.dto';
 import { UpdateDto } from './dto/update.dto';
@@ -27,6 +26,35 @@ export class UserService {
             return result;
         } catch (error) {
             console.error('Error sending email:', error);
+        }
+    }
+
+    async sendOtp(to: string) {
+        try {
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+            const otpExpiry = new Date();
+            otpExpiry.setMinutes(otpExpiry.getMinutes() + 5);
+            const otpUpdate = await this.utilsService.updateQuery(
+                'user', // Table name
+                { otp: otp, otp_expiry: otpExpiry }, // Fields to update
+                { number: to } // Condition for the update
+            );
+            if (!otpUpdate) {
+                throw new HttpException(
+                    { message: 'Error while sending otp' },
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            }
+            const formattedPhoneNumber = `+91${to}`;
+            const otpPayload = {
+                phone: formattedPhoneNumber,
+                otp,
+            };
+            this.client.emit('send_otp', otpPayload);
+            return { status: 'success', message: 'OTP sent successfully!' };
+        } catch (error) {
+            console.error('Error sending otp');
         }
     }
 
@@ -76,6 +104,46 @@ export class UserService {
         } else {
             return user;
         }
+    }
+
+    async findByNumber(phone: string): Promise<{
+        number: string;
+        id: number;
+        email: string;
+        password: string;
+        isBlocked: boolean;
+        isEmailverified: boolean;
+        otp: string;
+        otp_expiry;
+    }> {
+        const user = await this.utilsService.querySingle<{
+            id: number;
+            number: string;
+            password: string;
+            is_blocked: boolean;
+            is_email_verified: boolean;
+            otp: string;
+            email: string;
+            otp_expiry;
+        }>(
+            `SELECT id, email, password,is_email_verified,is_blocked,otp,otp_expiry FROM "user" WHERE number = $1`,
+            phone
+        );
+
+        if (!user) {
+            throw new HttpException({ message: 'User not found' }, HttpStatus.NOT_FOUND);
+        }
+
+        return {
+            id: user.id,
+            number: user.number,
+            password: user.password,
+            isBlocked: user.is_blocked,
+            isEmailverified: user.is_email_verified,
+            otp: user.otp,
+            email: user.email,
+            otp_expiry: user.otp_expiry,
+        };
     }
 
     async findByEmail(email: string): Promise<{

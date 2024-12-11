@@ -27,4 +27,9 @@ export class UserController {
     async delete(@Param('id') id: number): Promise<boolean> {
         return this.userService.delete(id);
     }
+
+    @Get('otp/:phone')
+    async sendOtp(@Param('phone') phone: string) {
+        return await this.userService.sendOtp(phone);
+    }
 }

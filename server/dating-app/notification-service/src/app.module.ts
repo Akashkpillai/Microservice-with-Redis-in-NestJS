@@ -5,6 +5,8 @@ import { MailerService } from './mailer/mailer.service';
 import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';
 import { EmailProcessor } from './processor/email.processor';
+import { OtpProcessor } from './processor/otp.processor';
+import { TwilioService } from './otp-service/otp.service';
 
 @Module({
   imports: [
@@ -15,11 +17,22 @@ import { EmailProcessor } from './processor/email.processor';
         port: 6379,
       },
     }),
-    BullModule.registerQueue({
-      name: 'email-queue',
-    }),
+    BullModule.registerQueue(
+      {
+        name: 'email-queue',
+      },
+      {
+        name: 'otp-queue',
+      },
+    ),
   ],
   controllers: [NotificationController],
-  providers: [NotificationService, MailerService, EmailProcessor],
+  providers: [
+    NotificationService,
+    MailerService,
+    EmailProcessor,
+    OtpProcessor,
+    TwilioService,
+  ],
 })
 export class AppModule {}

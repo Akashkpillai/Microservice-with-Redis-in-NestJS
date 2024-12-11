@@ -19,7 +19,12 @@ export class AuthController {
     }
 
     @Post('login/email')
-    async login(@Body() data: LoginEmailDto): Promise<{ active_token: string }> {
+    async login(@Body() data: LoginEmailDto): Promise<{ access_token: string }> {
         return await this.authService.login(data);
+    }
+
+    @Post('login/otp')
+    async sendOtp(@Body() data: { phone: string; otp: string }): Promise<{ access_token: string }> {
+        return await this.authService.otpLogin(data);
     }
 }
