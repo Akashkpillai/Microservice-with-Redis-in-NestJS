@@ -15,7 +15,7 @@ async function bootstrap() {
 
   await app.startAllMicroservices();
   await app.listen(3001, () => {
-    console.log('Notification service is running...');
+    console.log('Notification service is running on 3001.....');
   });
 }
 bootstrap();

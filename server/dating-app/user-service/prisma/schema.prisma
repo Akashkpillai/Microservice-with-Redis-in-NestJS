@@ -25,7 +25,7 @@ model user {
   is_email_verified Boolean? @default(false)
   is_blocked        Boolean? @default(false)
   otp               String?  @default("")
-  otp_expiry        DateTime?
+  otp_expiry        DateTime? @db.Timestamptz(6)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @default(now())
 

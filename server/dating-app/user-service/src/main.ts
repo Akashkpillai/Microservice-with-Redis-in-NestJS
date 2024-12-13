@@ -17,6 +17,6 @@ async function bootstrap() {
     app.useGlobalPipes(new ValidationPipe());
 
     await app.listen(3011);
-    console.log('Port is running on 3011');
+    console.log('User service is running on 3011');
 }
 bootstrap();

@@ -134,11 +134,9 @@ export class AuthService {
         const user = await this.usreService.findByNumber(data.phone);
 
         const currentTime = new Date();
-        const utcTime = currentTime.toISOString();
-        user.otp_expiry = user.otp_expiry.toISOString();
 
         // Check if OTP has expired
-        if (utcTime > user.otp_expiry) {
+        if (currentTime > user.otp_expiry) {
             throw new HttpException({ message: 'OTP has expired' }, HttpStatus.BAD_REQUEST);
         }
         if (user.otp !== data.otp) {
