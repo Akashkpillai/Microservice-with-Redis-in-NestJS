@@ -8,13 +8,23 @@ export class EmailProcessor {
 
   @Process('send-email-job')
   async handleSendEmailJob(
-    job: Job<{ to: string; subject: string; html?: string }>,
+    job: Job<{
+      to: string;
+      subject: string;
+      templateName: string;
+      html?: Record<string, any>;
+    }>,
   ) {
-    const { to, subject, html } = job.data;
+    const { to, subject, html, templateName } = job.data;
 
     try {
       // Send the email using MailerService
-      await this.mailerService.sendMail(to, subject, html);
+      await this.mailerService.loadAndSendTemplate(
+        to,
+        subject,
+        templateName,
+        html,
+      );
       console.log(`Email sent to ${to} successfully!`);
     } catch (error) {
       console.error(`Failed to send email to ${to}:`, error.message);

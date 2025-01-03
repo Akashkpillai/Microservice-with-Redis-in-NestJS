@@ -1,3 +1,4 @@
+import { TemplateLoader } from './template-loader';
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
@@ -6,7 +7,10 @@ import { ConfigService } from '@nestjs/config';
 export class MailerService {
   private transporter: nodemailer.Transporter;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private readonly templateLoader: TemplateLoader,
+  ) {
     this.transporter = nodemailer.createTransport({
       host: this.configService.get('MAIL_HOST'),
       port: +this.configService.get<number>('MAIL_PORT'),
@@ -33,5 +37,15 @@ export class MailerService {
       console.error('Error sending email: ', error);
       throw error;
     }
+  }
+
+  async loadAndSendTemplate(
+    to: string,
+    subject: string,
+    templateName: string,
+    templateData: Record<string, any>,
+  ) {
+    const html = this.templateLoader.loadTemplate(templateName, templateData);
+    await this.sendMail(to, subject, html);
   }
 }

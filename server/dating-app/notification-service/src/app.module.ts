@@ -7,6 +7,7 @@ import { BullModule } from '@nestjs/bull';
 import { EmailProcessor } from './processor/email.processor';
 import { OtpProcessor } from './processor/otp.processor';
 import { TwilioService } from './otp-service/otp.service';
+import { TemplateLoader } from './mailer/template-loader';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { TwilioService } from './otp-service/otp.service';
     EmailProcessor,
     OtpProcessor,
     TwilioService,
+    TemplateLoader,
   ],
 })
 export class AppModule {}

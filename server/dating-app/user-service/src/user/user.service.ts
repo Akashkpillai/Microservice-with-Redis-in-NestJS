@@ -14,11 +14,12 @@ export class UserService {
         @Inject('NOTIFICATION_SERVICE') private readonly client: ClientProxy
     ) {}
 
-    async notifyUser(to: string, subject: string, html: string) {
+    async notifyUser(to: string, subject: string, html: string, templateName: string) {
         const emailPayload = {
             to: to,
             subject: subject,
             html: html,
+            templateName: templateName,
         };
 
         try {

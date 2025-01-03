@@ -16,7 +16,7 @@ export class NotificationController {
   async handleSendEmail(payload: {
     to: string;
     subject: string;
-    html?: string;
+    activationLink?: string;
   }) {
     try {
       await this.emailQueue.add('send-email-job', payload, {

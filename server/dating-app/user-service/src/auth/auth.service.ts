@@ -6,7 +6,7 @@ import { UserService } from 'src/user/user.service';
 import { CreateUserDto } from 'src/user/dto/create.dto';
 import { User } from 'src/user/dto/user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { EmailTemplates } from 'email.templete';
+// import { EmailTemplates } from 'email.templete';
 
 @Injectable()
 export class AuthService {
@@ -57,6 +57,7 @@ export class AuthService {
             const activationToken = this.jwtService.sign({ id: user[0].id }, { expiresIn: '5m' });
             // Construct the activation link
             const activationLink = `https://localhost:3000/activate-account?token=${activationToken}`;
+            console.log(activationToken);
 
             const userData: User = await this.utilsService.querySingle(
                 ` SELECT * FROM "user" WHERE id = $1`,
@@ -66,7 +67,8 @@ export class AuthService {
             await this.usreService.notifyUser(
                 userData.email,
                 'Activate Your Account',
-                EmailTemplates.activationEmail(activationLink) // HTML content
+                activationLink, // HTML content,
+                'register'
             );
 
             return { message: 'Activation email sent. Please check your inbox.' };
