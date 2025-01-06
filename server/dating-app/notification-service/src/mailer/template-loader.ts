@@ -1,29 +1,41 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import * as Handlebars from 'handlebars';
+// import * as Handlebars from 'handlebars';
+import * as hbs from 'hbs';
 
 export class TemplateLoader {
-  private templatesDir: string;
+  private readonly templatePath = path.join(
+    process.cwd(),
+    'src',
+    'mailer',
+    'templates',
+  );
+  /**
+   * Loads and compiles an HBS template.
+   * @param templateName Name of the template file (without `.hbs` extension)
+   * @param data Data to interpolate into the template
+   * @returns Rendered HTML as a string
+   */
+  async renderTemplate(
+    templateName: string,
+    data: Record<string, any>,
+  ): Promise<string> {
+    try {
+      // Resolve the full path of the template
+      const filePath = path.join(this.templatePath, `${templateName}.hbs`);
 
-  constructor() {
-    // Determine the base path dynamically
-    const basePath =
-      process.env.NODE_ENV === 'production'
-        ? path.join(process.cwd(), 'dist')
-        : path.join(process.cwd(), 'src');
+      // Read the template content
+      const templateContent = await fs.promises.readFile(filePath, 'utf8');
 
-    this.templatesDir = path.join(basePath, 'templates');
-  }
+      // Compile the template
+      const compiledTemplate = hbs.compile(templateContent);
 
-  loadTemplate(templateName: string, data: Record<string, any>): string {
-    const filePath = path.join(this.templatesDir, `${templateName}.hbs`);
-
-    if (!fs.existsSync(filePath)) {
-      throw new Error(`Template file not found: ${filePath}`);
+      // Render the template with data
+      return compiledTemplate(data);
+    } catch (error) {
+      throw new Error(
+        `Error loading template "${templateName}": ${error.message}`,
+      );
     }
-
-    const templateContent = fs.readFileSync(filePath, 'utf8');
-    const template = Handlebars.compile(templateContent);
-    return template(data);
   }
 }

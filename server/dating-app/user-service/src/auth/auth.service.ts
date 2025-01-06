@@ -56,7 +56,9 @@ export class AuthService {
         if (user[0].id) {
             const activationToken = this.jwtService.sign({ id: user[0].id }, { expiresIn: '5m' });
             // Construct the activation link
-            const activationLink = `https://localhost:3000/activate-account?token=${activationToken}`;
+            const activationLink = {
+                activationToken: `https://localhost:3000/activate-account?token=${activationToken}`,
+            };
             console.log(activationToken);
 
             const userData: User = await this.utilsService.querySingle(

@@ -36,5 +36,6 @@ import { TemplateLoader } from './mailer/template-loader';
     TwilioService,
     TemplateLoader,
   ],
+  exports: [TemplateLoader],
 })
 export class AppModule {}

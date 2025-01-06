@@ -45,7 +45,10 @@ export class MailerService {
     templateName: string,
     templateData: Record<string, any>,
   ) {
-    const html = this.templateLoader.loadTemplate(templateName, templateData);
+    const html = await this.templateLoader.renderTemplate(
+      templateName,
+      templateData,
+    );
     await this.sendMail(to, subject, html);
   }
 }
