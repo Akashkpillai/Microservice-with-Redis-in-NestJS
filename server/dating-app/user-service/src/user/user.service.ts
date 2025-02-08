@@ -83,7 +83,7 @@ export class UserService {
 
     async findAll(): Promise<User[]> {
         const users = await this.prismaService.$queryRawUnsafe<User[]>(
-            `SELECT name , email , bio ,gender , preferences FROM "user";`
+            `SELECT name , email , bio ,gender , preferences ,number FROM "user";`
         );
         if (!users.length) {
             throw new HttpException({ message: 'User details not found' }, HttpStatus.NOT_FOUND);
