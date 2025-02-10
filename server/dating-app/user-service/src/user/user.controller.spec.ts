@@ -67,5 +67,5 @@ describe('API test for get all users', () => {
         const data = await axios.get('http://localhost:3011/user');
         expect(data.status).toBe(200);
         expect(data.data).toStrictEqual(mockData);
-    });
+    }, 1000);
 });

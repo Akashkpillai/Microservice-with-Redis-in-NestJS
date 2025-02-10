@@ -3,6 +3,7 @@ import { UserService } from './user.service';
 // import { CreateUserDto } from './dto/create.dto';
 import { User } from './dto/user.dto';
 import { UpdateDto } from './dto/update.dto';
+import { MessagePattern } from '@nestjs/microservices';
 
 @Controller('user')
 export class UserController {
@@ -31,5 +32,15 @@ export class UserController {
     @Get('otp/:phone')
     async sendOtp(@Param('phone') phone: string) {
         return await this.userService.sendOtp(phone);
+    }
+
+    @MessagePattern({ cmd: 'get_user' })
+    async sendUserData() {
+        try {
+            const result = await this.userService.findAll();
+            return { status: 'OK', result };
+        } catch (error) {
+            console.log(error);
+        }
     }
 }

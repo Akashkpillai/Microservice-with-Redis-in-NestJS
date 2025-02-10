@@ -1,30 +1,33 @@
-// app.module.ts
+import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { UserEventModule } from './user_events/user_events.module';
 
 @Module({
   imports: [
+    BullModule.forRoot({
+      redis: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
+
     ClientsModule.register([
       {
-        // Use a unique name for the microservice client
-        name: 'API_GATEWAY_SERVICE',
+        name: 'MATCH_SERVICE',
         transport: Transport.REDIS,
-        options: {
-          host: 'localhost', // adjust as needed (or use env variables)
-          port: 6379,
-          // Optional: enable wildcards if you need pattern matching
-          wildcards: false,
-          // Optional: adjust retryAttempts and retryDelay as required
-          retryAttempts: 5,
-          retryDelay: 3000,
-        },
+        options: { host: 'localhost', port: 6379 },
       },
-      // Register additional services if needed...
+      {
+        name: 'NOTIFICATION_SERVICE',
+        transport: Transport.REDIS,
+        options: { host: 'localhost', port: 6379 },
+      },
     ]),
+    UserEventModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [],
 })
 export class AppModule {}
