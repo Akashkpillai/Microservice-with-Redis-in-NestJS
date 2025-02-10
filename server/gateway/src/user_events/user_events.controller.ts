@@ -20,7 +20,7 @@ export class UserEventController {
   @Get('user')
   async getUser() {
     const observable$ = this.userServiceClient
-      .send({ cmd: 'get_user' }, {})
+      .emit({ cmd: 'get_user' }, {})
       .pipe(defaultIfEmpty(null));
 
     // Convert the observable to a promise.
