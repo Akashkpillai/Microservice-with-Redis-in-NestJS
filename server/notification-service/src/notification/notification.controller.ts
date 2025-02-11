@@ -23,7 +23,6 @@ export class NotificationController {
         attempts: 3,
         backoff: 5000,
       });
-      console.log('Email added to queue');
       return { status: 'success', message: 'Email sent successfully!' };
     } catch (error) {
       console.error('Failed to add job to queue:', error.message);

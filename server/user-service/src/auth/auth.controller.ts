@@ -2,6 +2,7 @@ import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginEmailDto } from './dto/login.dto';
 import { CreateUserDto } from 'src/user/dto/create.dto';
+import { MessagePattern } from '@nestjs/microservices';
 // import { User } from 'src/user/dto/user.dto';
 
 @Controller('auth')
@@ -11,6 +12,17 @@ export class AuthController {
     @Post('register')
     async register(@Body() data: CreateUserDto): Promise<{ message: string }> {
         return this.authService.register(data);
+    }
+
+    @MessagePattern({ cmd: 'register_user' })
+    async registerUser(data: CreateUserDto) {
+        try {
+            const result = await this.authService.register(data);
+            console.log('this is from auth', result);
+            return { status: 'OK', result };
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     @Patch('mail-verification/:token')

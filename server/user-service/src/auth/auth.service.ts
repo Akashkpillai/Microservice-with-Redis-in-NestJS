@@ -6,6 +6,7 @@ import { UserService } from 'src/user/user.service';
 import { CreateUserDto } from 'src/user/dto/create.dto';
 import { User } from 'src/user/dto/user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { RpcException } from '@nestjs/microservices';
 // import { EmailTemplates } from 'email.templete';
 
 @Injectable()
@@ -26,10 +27,14 @@ export class AuthService {
 
         if (existingUser) {
             const conflictField = existingUser.email === data.email ? 'email' : 'number';
-            throw new HttpException(
-                { message: `User with same ${conflictField} already exist` },
-                HttpStatus.CONFLICT
-            );
+            // throw new HttpException(
+            //     { message: `User with same ${conflictField} already exist` },
+            //     HttpStatus.CONFLICT
+            // );
+            throw new RpcException({
+                message: `User with same ${conflictField} already exist`,
+                status: 409,
+            });
         }
 
         const hashedPassword = await this.usreService.hashPassword(data.password);
